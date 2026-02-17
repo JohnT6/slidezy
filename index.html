@@ -53,7 +53,10 @@
         </div>
         <script src="./src/slidezy.js"></script>
         <script>
-            const slide = new Slidezy("#my-slider");
+            const slide = new Slidezy("#my-slider", {
+                item: 3,
+                loop: true,
+            });
         </script>
     </body>
 </html>
