@@ -6,10 +6,11 @@
 
 .slidezy-track {
     display: flex;
+    transition: transform ease 0.3s;
 }
 
 .slidezy-slide {
-    flex: 0 0 calc(100% / 1);
+    flex: 0 0 calc(100% / 3);
 }
 
 .slidezy-prev,

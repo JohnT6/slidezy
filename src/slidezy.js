@@ -8,6 +8,7 @@ function Slidezy(selector, options = {}) {
 
     this.opt = Object.assign({}, options);
     this.slides = Array.from(this.container.children);
+    this.currentIndex = 0;
 
     this._init();
 }
@@ -48,5 +49,10 @@ Slidezy.prototype._createNavigation = function () {
 };
 
 Slidezy.prototype.moveSlide = function (step) {
-    console.log(step);
+    this.currentIndex = Math.min(
+        Math.max(this.currentIndex + step, 0),
+        this.slides.length - 3,
+    );
+    this.offset = -(this.currentIndex * (100 / 3));
+    this.track.style.transform = `translateX(${this.offset}%)`;
 };
