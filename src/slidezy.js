@@ -11,6 +11,12 @@ function Slidezy(selector, options = {}) {
             items: 1,
             loop: false,
             speed: 300,
+            nav: true,
+            controls: true,
+            controlText: ["<", ">"],
+            prevButton: null,
+            nextButton: null,
+            slideBy: 1,
         },
         options,
     );
@@ -24,8 +30,22 @@ function Slidezy(selector, options = {}) {
 Slidezy.prototype._init = function () {
     this.container.classList.add("slidezy-wrapper");
 
+    this._createContent();
     this._createTrack();
-    this._createNavigation();
+
+    if (this.opt.controls) {
+        this._createControls();
+    }
+
+    if (this.opt.nav) {
+        this._createNav();
+    }
+};
+
+Slidezy.prototype._createContent = function () {
+    this.content = document.createElement("div");
+    this.content.className = "slidezy-content";
+    this.container.appendChild(this.content);
 };
 
 Slidezy.prototype._createTrack = function () {
@@ -49,23 +69,59 @@ Slidezy.prototype._createTrack = function () {
         this.track.appendChild(slide);
     });
 
-    this.container.append(this.track);
+    this.content.append(this.track);
 };
 
-Slidezy.prototype._createNavigation = function () {
-    this.btnPrev = document.createElement("button");
-    this.btnNext = document.createElement("button");
+Slidezy.prototype._createControls = function () {
+    this.btnPrev = this.opt.prevButton
+        ? document.querySelector(this.opt.prevButton)
+        : document.createElement("button");
+    this.btnNext = this.opt.nextButton
+        ? document.querySelector(this.opt.nextButton)
+        : document.createElement("button");
 
-    this.btnPrev.className = "slidezy-prev";
-    this.btnNext.className = "slidezy-next";
+    if (!this.opt.prevButton) {
+        this.btnPrev.className = "slidezy-prev";
+        this.btnPrev.innerText = this.opt.controlText[0];
+        this.content.appendChild(this.btnPrev);
+    }
+    if (!this.opt.nextButton) {
+        this.btnNext.className = "slidezy-next";
+        this.btnNext.innerText = this.opt.controlText[1];
+        this.content.appendChild(this.btnNext);
+    }
 
-    this.btnPrev.innerText = "<";
-    this.btnNext.innerText = ">";
+    const slideSize =
+        this.opt.slideBy === "page" ? this.opt.items : this.opt.slideBy;
 
-    this.container.append(this.btnPrev, this.btnNext);
+    this.btnPrev.onclick = () => this.moveSlide(-slideSize);
+    this.btnNext.onclick = () => this.moveSlide(slideSize);
+};
 
-    this.btnPrev.onclick = () => this.moveSlide(-1);
-    this.btnNext.onclick = () => this.moveSlide(1);
+Slidezy.prototype._createNav = function () {
+    this.navWrapper = document.createElement("div");
+    this.navWrapper.className = "slidezy-nav";
+
+    const slideCount =
+        this.slides.length - (this.opt.loop ? this.opt.items * 2 : 0);
+    const pageCount = Math.ceil(slideCount / this.opt.items);
+
+    for (let i = 0; i < pageCount; i++) {
+        const dot = document.createElement("button");
+        dot.className = "slidezy-dot";
+
+        if (i === 0) dot.classList.add("active");
+
+        dot.onclick = () => {
+            this.currentIndex = this.opt.loop
+                ? i * this.opt.items + this.opt.items
+                : i * this.opt.items;
+            this._updatePosition();
+        };
+
+        this.navWrapper.appendChild(dot);
+    }
+    this.container.append(this.navWrapper);
 };
 
 Slidezy.prototype.moveSlide = function (step) {
@@ -81,10 +137,11 @@ Slidezy.prototype.moveSlide = function (step) {
         if (this.opt.loop) {
             if (this.currentIndex <= 0) {
                 this.currentIndex = maxIndex - this.opt.items;
+                this._updatePosition(true);
             } else if (this.currentIndex >= maxIndex) {
                 this.currentIndex = this.opt.items;
+                this._updatePosition(true);
             }
-            this._updatePosition(true);
         }
         this._isAnimating = false;
     }, this.opt.speed);
@@ -92,8 +149,29 @@ Slidezy.prototype.moveSlide = function (step) {
     this._updatePosition();
 };
 
+Slidezy.prototype._updateNav = function () {
+    let realIndex = this.currentIndex;
+
+    if (this.opt.loop) {
+        const slideCount = this.slides.length - this.opt.items * 2;
+        realIndex =
+            (this.currentIndex - this.opt.items + slideCount) % slideCount;
+    }
+
+    const pageIndex = Math.floor(realIndex / this.opt.items);
+    const dots = Array.from(this.navWrapper.children);
+
+    dots.forEach((dot, index) => {
+        dot.classList.toggle("active", index === pageIndex);
+    });
+};
+
 Slidezy.prototype._updatePosition = function (instant = false) {
     this.track.style.transition = instant ? `none` : `transform ease 0.3s`;
     this.offset = -(this.currentIndex * (100 / this.opt.items));
     this.track.style.transform = `translateX(${this.offset}%)`;
+
+    if (this.opt.nav && !instant) {
+        this._updateNav();
+    }
 };

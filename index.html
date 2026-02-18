@@ -51,11 +51,21 @@
             <div class="slide-5">Slide 5</div>
             <div class="slide-6">Slide 6</div>
         </div>
+        <!-- <div class="my-controls">
+            <button class="slide-prev">Prev</button>
+            <button class="slide-next">Next</button>
+        </div> -->
         <script src="./src/slidezy.js"></script>
         <script>
             const slide = new Slidezy("#my-slider", {
                 items: 3,
                 loop: true,
+                nav: true,
+                // controls: false,
+                // controlText: ["lui", "tien"],
+                // prevButton: ".slide-prev",
+                // nextButton: ".slide-next",
+                slideBy: "page",
             });
         </script>
     </body>
